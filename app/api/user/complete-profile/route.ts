@@ -83,6 +83,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Ensure user is not null before accessing properties
+    if (!user) {
+      return NextResponse.json(
+        { error: "Failed to create or update user profile" },
+        { status: 500 }
+      );
+    }
+    
     return NextResponse.json({
       success: true,
       message: "Profile completed successfully",

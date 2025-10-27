@@ -39,10 +39,17 @@ export async function POST() {
         console.error("Error creating user from Clerk data:", clerkError);
         // Create a basic user profile without Clerk data as fallback
         try {
+          // Generate a unique username with random suffix
+          const randomSuffix = Math.random().toString(36).substring(2, 8);
+          const username = `User_${randomSuffix}`;
+          
+          // Check if username already exists
+          const existingUser = await User.findOne({ username });
+          
           user = await User.create({
             clerkId: userId,
-            email: "",
-            username: `User_${userId.slice(-6)}`,
+            email: userId, // Using userId as email to satisfy required field
+            username: existingUser ? `User_${randomSuffix}_${Date.now().toString().slice(-6)}` : username,
             education: "",
             career: "",
             languagesKnown: [],
