@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Navbar from "@/components/navbar";
+import Link from "next/link";
 
 export default function Home() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -133,7 +134,7 @@ export default function Home() {
 
         {/* CTA Buttons - Premium */}
         <div className="flex flex-col sm:flex-row gap-5 mb-20 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-          <a href="/sign-up" className="group relative px-10 py-5 bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 rounded-2xl font-semibold text-lg overflow-hidden transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/50">
+          <Link href="/sign-up" className="group relative px-10 py-5 bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 rounded-2xl font-semibold text-lg overflow-hidden transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/50">
             <span className="relative z-10 flex items-center justify-center gap-3">
               Start Your Journey+
               <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -141,7 +142,7 @@ export default function Home() {
               </svg>
             </span>
             <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          </a>
+          </Link>
           <button className="px-10 py-5 bg-white/5 backdrop-blur-xl hover:bg-white/10 border border-white/10 rounded-2xl font-semibold text-lg transition-all hover:scale-[1.02] hover:border-white/20">
             Watch Demo
           </button>
@@ -235,11 +236,11 @@ export default function Home() {
               Begin Your Evolution
             </h2>
             <p className="text-xl text-white/90 font-light mb-12 max-w-2xl mx-auto leading-relaxed">
-              Join the movement. Transform your potential into performance with the world's most advanced learning platform.
+              Join the movement. Transform your potential into performance with the world&apos;s most advanced learning platform.
             </p>
-            <a href="/sign-up" className="inline-block px-12 py-6 bg-white hover:bg-gray-100 text-black text-lg font-bold rounded-2xl transition-all hover:scale-[1.02] shadow-2xl">
+            <Link href="/sign-up" className="inline-block px-12 py-6 bg-white hover:bg-gray-100 text-black text-lg font-bold rounded-2xl transition-all hover:scale-[1.02] shadow-2xl">
               Start Free Today
-            </a>
+            </Link>
           </div>
         </div>
       </div>

@@ -3,6 +3,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from '@clerk/nextjs';
+import { AssessmentResults } from "@/components/assessment-results";
+import { motion, AnimatePresence } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface Question {
     question: string;
@@ -18,6 +23,8 @@ interface Assessment {
     totalQuestions: number;
     isCompleted: boolean;
     score?: number;
+    completedAt?: string;
+    createdAt: string;
 }
 
 export default function AssessmentDashboard() {
@@ -161,11 +168,11 @@ export default function AssessmentDashboard() {
             const data = await response.json();
             
             if (data.success) {
-                // Redirect to roadmap after successful submission
-                router.push("/roadmap");
+                // Refresh assessment data to show results
+                loadAssessment();
             } else {
                 setError(data.error || "Failed to submit assessment");
-            }
+           }
         } catch (error) {
             console.error("Error submitting assessment:", error);
             setError("Failed to submit assessment");
@@ -174,76 +181,156 @@ export default function AssessmentDashboard() {
 
     if (loading || checkingProfile) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">
+            <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center"
+            >
+                <motion.div 
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-center"
+                >
+                    <motion.div 
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"
+                    />
+                    <motion.p 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="text-gray-700 font-medium"
+                    >
                         {checkingProfile ? "Checking profile..." : "Loading assessment..."}
-                    </p>
-                </div>
-            </div>
+                    </motion.p>
+                </motion.div>
+            </motion.div>
         );
     }
 
     if (error) {
         return (
-            <div className="min-h-screen bg-white flex items-center justify-center p-4">
-                <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-                    <div className="text-red-600 text-5xl mb-4">⚠️</div>
-                    <h2 className="text-2xl font-bold text-gray-800 mb-4">Error</h2>
-                    <p className="text-gray-600 mb-6">{error}</p>
-                    <div className="space-y-3">
-                        <button
+            <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="min-h-screen bg-gradient-to-br from-red-50 to-pink-100 flex items-center justify-center p-4"
+            >
+                <motion.div 
+                    initial={{ scale: 0.8, opacity: 0, y: 20 }}
+                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 100 }}
+                    className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center"
+                >
+                    <motion.div 
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                        className="text-red-600 text-6xl mb-4"
+                    >
+                        ⚠️
+                    </motion.div>
+                    <motion.h2 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="text-2xl font-bold text-gray-800 mb-4"
+                    >
+                        Error
+                    </motion.h2>
+                    <motion.p 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="text-gray-600 mb-6"
+                    >
+                        {error}
+                    </motion.p>
+                    <motion.div 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                        className="space-y-3"
+                    >
+                        <Button
                             onClick={loadAssessment}
-                            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+                            className="w-full bg-blue-600 hover:bg-blue-700 transition-all duration-200 transform hover:scale-105"
                         >
                             Try Again
-                        </button>
+                        </Button>
                         {error.includes("languages") && (
-                            <button
+                            <Button
                                 onClick={() => router.push("/complete-profile")}
-                                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition ml-3"
+                                className="w-full bg-green-600 hover:bg-green-700 transition-all duration-200 transform hover:scale-105"
                             >
                                 Complete Profile
-                            </button>
+                            </Button>
                         )}
-                    </div>
-                </div>
-            </div>
+                    </motion.div>
+                </motion.div>
+            </motion.div>
         );
     }
 
-    if (submitted && assessment) {
+    if (submitted || (assessment && assessment.isCompleted)) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-                    <div className="mb-6">
-                        <div className="text-6xl font-bold text-blue-600 mb-2">
-                            {assessment.score}%
-                        </div>
-                        <h2 className="text-2xl font-bold text-gray-800">Assessment Complete!</h2>
-                    </div>
-                    <p className="text-gray-600 mb-6">
-                        You answered {Math.round((assessment.score! / 100) * assessment.totalQuestions)} out of {assessment.totalQuestions} questions correctly.
-                    </p>
-                    <button
-                        onClick={() => router.push("/dashboard")}
-                        className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
-                    >
-                        Go to Dashboard
-                    </button>
-                </div>
-            </div>
+            <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4"
+            >
+                <motion.div 
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 100 }}
+                    className="max-w-2xl mx-auto"
+                >
+                    <AssessmentResults assessment={assessment || undefined} />
+                </motion.div>
+            </motion.div>
         );
     }
 
     if (!assessment || assessment.questions.length === 0) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
-                    <p className="text-gray-600">No assessment available</p>
-                </div>
-            </div>
+            <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center"
+            >
+                <motion.div 
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 100 }}
+                    className="text-center"
+                >
+                    <motion.div 
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                        className="text-6xl mb-4"
+                    >
+                        📋
+                    </motion.div>
+                    <motion.h2 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="text-xl font-semibold text-gray-700 mb-2"
+                    >
+                        No Assessment Available
+                    </motion.h2>
+                    <motion.p 
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="text-gray-500"
+                    >
+                        Please check back later or contact support.
+                    </motion.p>
+                </motion.div>
+            </motion.div>
         );
     }
 
@@ -252,108 +339,153 @@ export default function AssessmentDashboard() {
     const allQuestionsAnswered = Object.keys(selectedAnswers).length === assessment.totalQuestions;
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4">
-            <div className="max-w-3xl mx-auto py-8">
-                {/* Header */}
-                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                    <div className="flex justify-between items-center mb-4">
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-800">Language Assessment</h1>
-                            <p className="text-sm text-gray-600 mt-1">
-                                Welcome back, {user?.firstName || user?.username || 'there'}!
-                            </p>
-                        </div>
-                        <span className="text-sm text-gray-600">
-                            Question {currentQuestion + 1} of {assessment.totalQuestions}
-                        </span>
-                    </div>
-                    
-                    {/* Progress Bar */}
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${progress}%` }}
-                        ></div>
-                    </div>
-
-                    {/* Answered Questions Counter */}
-                    <div className="mt-2 text-sm text-gray-600">
-                        Answered: {Object.keys(selectedAnswers).length} / {assessment.totalQuestions}
-                    </div>
-                </div>
-
-                {/* Question Card */}
-                <div className="bg-white rounded-lg shadow-md p-8">
-                    <div className="mb-2">
-                        <span className="inline-block bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full">
-                            {question.language}
-                        </span>
-                    </div>
-                    
-                    <h2 className="text-xl font-semibold text-gray-800 mb-6">
-                        {question.question}
-                    </h2>
-
-                    {/* Options */}
-                    <div className="space-y-3">
-                        {question.options.map((option, index) => (
-                            <button
-                                key={index}
-                                onClick={() => handleAnswerSelect(index)}
-                                className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
-                                    selectedAnswers[currentQuestion] === index
-                                        ? "border-blue-600 bg-blue-50"
-                                        : "border-gray-200 hover:border-gray-300"
-                                }`}
-                            >
-                                <div className="flex items-center">
-                                    <div className={`w-6 h-6 rounded-full border-2 mr-3 flex items-center justify-center ${
-                                        selectedAnswers[currentQuestion] === index
-                                            ? "border-blue-600 bg-blue-600"
-                                            : "border-gray-300"
-                                    }`}>
-                                        {selectedAnswers[currentQuestion] === index && (
-                                            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                            </svg>
-                                        )}
-                                    </div>
-                                    <span className="text-gray-700">{option}</span>
-                                </div>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Navigation */}
-                <div className="flex justify-between mt-6">
-                    <button
-                        onClick={handlePrevious}
-                        disabled={currentQuestion === 0}
-                        className="px-6 py-2 border-2 border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+        <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4"
+        >
+            <motion.div 
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.1, type: "spring", stiffness: 100 }}
+                className="max-w-4xl mx-auto"
+            >
+                <motion.div 
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
+                    className="bg-white rounded-2xl shadow-xl p-8"
+                >
+                    <motion.div 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="mb-8"
                     >
-                        Previous
-                    </button>
+                        <motion.h1 
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.4 }}
+                            className="text-3xl font-bold text-gray-800 mb-2"
+                        >
+                            Programming Assessment
+                        </motion.h1>
+                        <motion.p 
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.5 }}
+                            className="text-gray-600"
+                        >
+                            Test your knowledge across different programming languages
+                        </motion.p>
+                        <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${((currentQuestion + 1) / assessment.questions.length) * 100}%` }}
+                            transition={{ delay: 0.6, duration: 0.8 }}
+                            className="mt-4 bg-gray-200 rounded-full h-3 overflow-hidden"
+                        >
+                            <motion.div 
+                                className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full"
+                                initial={{ x: "-100%" }}
+                                animate={{ x: "0%" }}
+                                transition={{ delay: 0.6, duration: 0.8 }}
+                            />
+                        </motion.div>
+                        <motion.p 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.7 }}
+                            className="text-sm text-gray-500 mt-2"
+                        >
+                            Question {currentQuestion + 1} of {assessment.questions.length}
+                        </motion.p>
+                    </motion.div>
 
-                    {currentQuestion === assessment.totalQuestions - 1 ? (
-                        <button
-                            onClick={handleSubmit}
-                            disabled={!allQuestionsAnswered}
-                            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                            title={!allQuestionsAnswered ? "Please answer all questions before submitting" : ""}
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={currentQuestion}
+                            initial={{ opacity: 0, x: 50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -50 }}
+                            transition={{ type: "spring", stiffness: 100 }}
+                            className="mb-8"
                         >
-                            Submit Assessment
-                        </button>
-                    ) : (
-                        <button
-                            onClick={handleNext}
-                            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                            <div className="flex items-center justify-between mb-6">
+                                <motion.h2 
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.1 }}
+                                    className="text-xl font-semibold text-gray-800"
+                                >
+                                    {assessment.questions[currentQuestion].question}
+                                </motion.h2>
+                                <motion.div
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                                >
+                                    <Badge className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+                                        {assessment.questions[currentQuestion].language}
+                                    </Badge>
+                                </motion.div>
+                            </div>
+
+                            <div className="space-y-3">
+                                {assessment.questions[currentQuestion].options.map((option, index) => (
+                                    <motion.button
+                                        key={index}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.1 + index * 0.1 }}
+                                        onClick={() => handleAnswerSelect(index)}
+                                        className={`w-full text-left p-4 rounded-lg border-2 transition-all duration-200 transform hover:scale-102 hover:shadow-md ${
+                                            selectedAnswers[currentQuestion] === index
+                                                ? "border-blue-500 bg-blue-50 text-blue-800 shadow-lg"
+                                                : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                                        }`}
+                                    >
+                                        <span className="font-medium mr-2">{String.fromCharCode(65 + index)}.</span>
+                                        {option}
+                                    </motion.button>
+                                ))}
+                            </div>
+                        </motion.div>
+                    </AnimatePresence>
+
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.8 }}
+                        className="flex justify-between items-center"
+                    >
+                        <Button
+                            onClick={handlePrevious}
+                            disabled={currentQuestion === 0}
+                            variant="outline"
+                            className="px-6 py-2 border-2 border-gray-300 rounded-lg hover:border-gray-400 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                         >
-                            Next
-                        </button>
-                    )}
-                </div>
-            </div>
-        </div>
+                            Previous
+                        </Button>
+
+                        {currentQuestion === assessment.questions.length - 1 ? (
+                            <Button
+                                onClick={handleSubmit}
+                                disabled={Object.keys(selectedAnswers).length < assessment.questions.length}
+                                className="px-6 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-700 hover:to-green-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
+                            >
+                                Submit Assessment
+                            </Button>
+                        ) : (
+                            <Button
+                                onClick={handleNext}
+                                className="px-6 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 transform hover:scale-105"
+                            >
+                                Next
+                            </Button>
+                        )}
+                    </motion.div>
+                </motion.div>
+            </motion.div>
+        </motion.div>
     );
 }
